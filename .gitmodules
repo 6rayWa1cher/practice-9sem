@@ -1,0 +1,3 @@
+[submodule "polygon-editor"]
+	path = polygon-editor
+	url = https://github.com/Alstrasz/computational-geometry-tasks
