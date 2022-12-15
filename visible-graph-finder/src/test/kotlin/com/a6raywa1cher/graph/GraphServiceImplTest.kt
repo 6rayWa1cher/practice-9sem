@@ -2,18 +2,9 @@ package com.a6raywa1cher.graph
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 
 class GraphServiceImplTest {
     private val graphService = GraphServiceImpl()
-
-    private fun VisibilityGraph.normalize(areaMap: AreaMap): VisibilityGraph {
-        val visibleNeighbours = areaMap.polygons.flatMap { it.points }.associateWith { mutableSetOf<Point>() }
-        for ((p1, localNeighbors) in neighbors.entries) {
-            localNeighbors.forEach { visibleNeighbours[p1]!!.add(it); visibleNeighbours[it]!!.add(p1); }
-        }
-        return copy(neighbors = visibleNeighbours)
-    }
 
     @Test
     fun testEmpty() {
@@ -39,8 +30,11 @@ class GraphServiceImplTest {
         val visibilityGraph = graphService.convertToVisibilityGraph(areaMap)
 
         val expected = VisibilityGraph(
+            listOf(
+                Point(0, 0)
+            ),
             mapOf(
-                Pair(Point(0, 0), setOf())
+                0 to setOf()
             )
         )
 
@@ -66,9 +60,13 @@ class GraphServiceImplTest {
         val visibilityGraph = graphService.convertToVisibilityGraph(areaMap)
 
         val expected = VisibilityGraph(
+            listOf(
+                Point(0, 0),
+                Point(10, 10)
+            ),
             mapOf(
-                Pair(Point(0, 0), setOf(Point(10, 10))),
-                Pair(Point(10, 10), setOf(Point(0, 0)))
+                0 to setOf(1),
+                1 to setOf(0)
             )
         )
 
@@ -96,11 +94,17 @@ class GraphServiceImplTest {
         val visibilityGraph = graphService.convertToVisibilityGraph(areaMap)
 
         val expected = VisibilityGraph(
+            listOf(
+                Point(0, 0),
+                Point(0, 10),
+                Point(10, 0),
+                Point(10, 10)
+            ),
             mapOf(
-                Pair(Point(0, 0), setOf(Point(10, 10), Point(10, 0), Point(0, 10))),
-                Pair(Point(10, 0), setOf(Point(10, 10), Point(0, 0), Point(0, 10))),
-                Pair(Point(0, 10), setOf(Point(10, 10), Point(10, 0), Point(0, 0))),
-                Pair(Point(10, 10), setOf(Point(0, 10), Point(10, 0), Point(0, 0))),
+                0 to setOf(1, 2, 3),
+                1 to setOf(0, 2, 3),
+                2 to setOf(1, 0, 3),
+                3 to setOf(1, 2, 0)
             )
         )
 
@@ -121,8 +125,8 @@ class GraphServiceImplTest {
                 Polygon(
                     listOf(
                         Point(5, 1),
+                        Point(5, 3),
                         Point(6, 2),
-                        Point(5, 3)
                     )
                 )
             )
@@ -130,22 +134,29 @@ class GraphServiceImplTest {
         val visibilityGraph = graphService.convertToVisibilityGraph(areaMap)
 
         val expected = VisibilityGraph(
+            listOf(
+                Point(3, 1),
+                Point(3, 3),
+                Point(2, 2),
+                Point(5, 1),
+                Point(5, 3),
+                Point(6, 2)
+            ),
             mapOf(
-                Point(3, 1) to setOf(Point(5, 1), Point(5, 3), Point(3, 3), Point(2, 2)),
-                Point(3, 3) to setOf(Point(2, 2), Point(5, 3), Point(5, 1)),
-                Point(5, 1) to setOf(Point(5, 3), Point(6, 2)),
-                Point(5, 3) to setOf(Point(6, 2))
+                0 to setOf(2, 1, 4, 3),
+                1 to setOf(2, 0, 3, 4),
+                2 to setOf(0, 1),
+                3 to setOf(0, 1, 4, 5),
+                4 to setOf(3, 0, 1, 5),
+                5 to setOf(3, 4)
             )
-        ).normalize(areaMap)
+        )
 
         assertEquals(expected, visibilityGraph)
-        assertFalse(visibilityGraph.neighbors[Point(2, 2)]!!.contains(Point(6, 2)))
-        assertFalse(visibilityGraph.neighbors[Point(6, 2)]!!.contains(Point(2, 2)))
     }
 
     @Test
     fun testTwoCubicPolygons() {
-        TODO()
         val areaMap = AreaMap(
             listOf(
                 Polygon(
@@ -169,13 +180,74 @@ class GraphServiceImplTest {
         val visibilityGraph = graphService.convertToVisibilityGraph(areaMap)
 
         val expected = VisibilityGraph(
+            listOf(
+                Point(0, 0),    // 0
+                Point(0, 1),    // 1
+                Point(1, 0),    // 2
+                Point(1, 1),    // 3
+                Point(10, 0),   // 4
+                Point(10, 1),   // 5
+                Point(11, 0),   // 6
+                Point(11, 1)    // 7
+            ),
             mapOf(
-//                Point(0, 0) to
+                0 to setOf(1, 2),
+                1 to setOf(0, 3),
+                2 to setOf(0, 3, 4, 5),
+                3 to setOf(1, 2, 4, 5),
+                4 to setOf(2, 3, 5, 6),
+                5 to setOf(4, 2, 3, 7),
+                6 to setOf(4, 7),
+                7 to setOf(5, 6)
             )
-        ).normalize(areaMap)
+        )
 
         assertEquals(expected, visibilityGraph)
-        assertFalse(visibilityGraph.neighbors[Point(2, 2)]!!.contains(Point(6, 2)))
-        assertFalse(visibilityGraph.neighbors[Point(6, 2)]!!.contains(Point(2, 2)))
+    }
+
+    @Test
+    fun testRussianLetterP() {
+        val areaMap = AreaMap(
+            listOf(
+                Polygon(
+                    listOf(
+                        Point(0, 0),
+                        Point(0, 3),
+                        Point(1, 3),
+                        Point(1, 1),
+                        Point(2, 1),
+                        Point(2, 3),
+                        Point(3, 3),
+                        Point(3, 0)
+                    )
+                )
+            )
+        )
+        val visibilityGraph = graphService.convertToVisibilityGraph(areaMap)
+
+        val expected = VisibilityGraph(
+            listOf(
+                Point(0, 0),
+                Point(0, 3),
+                Point(1, 3),
+                Point(1, 1),
+                Point(2, 1),
+                Point(2, 3),
+                Point(3, 3),
+                Point(3, 0)
+            ),
+            mapOf(
+                0 to setOf(1, 7),
+                1 to setOf(0, 2),
+                2 to setOf(3, 4, 5),
+                3 to setOf(4, 5, 2),
+                4 to setOf(3, 2, 5),
+                5 to setOf(2, 3, 4),
+                6 to setOf(5, 7),
+                7 to setOf(0, 6)
+            )
+        )
+
+        assertEquals(expected, visibilityGraph)
     }
 }

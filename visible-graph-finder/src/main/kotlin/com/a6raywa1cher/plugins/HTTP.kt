@@ -1,6 +1,5 @@
 package com.a6raywa1cher.plugins
 
-//import com.papsign.ktor.openapigen.OpenAPIGen
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.compression.*
