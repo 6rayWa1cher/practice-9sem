@@ -137,6 +137,35 @@ class GraphServiceImplTest {
     }
 
     @Test
+    fun testIsInsideObservationAreaAntiCollinear() {
+        val pl = Point(3, 0)
+        val p = Point(2, 0)
+        val pr = Point(0, 0)
+        assertTrue(Point(3, 3).isInsideObservationArea(pl, p, pr))
+        assertFalse(Point(3, -3).isInsideObservationArea(pl, p, pr))
+        assertFalse(pl.isInsideObservationArea(pl, p, pr))
+        assertFalse(pr.isInsideObservationArea(pl, p, pr))
+    }
+
+    @Test
+    fun testIsInsideObservationAreaCollinear() {
+        val pl = Point(1, 0)
+        val p = Point(2, 0)
+        val pr = Point(1, 0)
+        assertFalse(Point(3, 3).isInsideObservationArea(pl, p, pr))
+        assertFalse(Point(3, -3).isInsideObservationArea(pl, p, pr))
+        assertFalse(Point(0, 0).isInsideObservationArea(pl, p, pr))
+        assertFalse(Point(3, 0).isInsideObservationArea(pl, p, pr))
+        for (i in -3..3) {
+            for (j in -3..3) {
+                assertFalse(Point(i, j).isInsideObservationArea(pl, p, pr))
+            }
+        }
+        assertFalse(pl.isInsideObservationArea(pl, p, pr))
+        assertFalse(pr.isInsideObservationArea(pl, p, pr))
+    }
+
+    @Test
     fun testEmpty() {
         val areaMap = AreaMap()
         val visibilityGraph = graphService.convertToVisibilityGraph(areaMap)
@@ -336,6 +365,47 @@ class GraphServiceImplTest {
     }
 
     @Test
+    fun testCubicWithProbe() {
+        val areaMap = AreaMap(
+            listOf(
+                Polygon(
+                    listOf(
+                        Point(0, 0),
+                        Point(0, 1),
+                        Point(1, 1),
+                        Point(1, 0),
+                    )
+                ),
+                Polygon(
+                    listOf(
+                        Point(10, 10),
+                    )
+                )
+            )
+        )
+        val visibilityGraph = graphService.convertToVisibilityGraph(areaMap)
+
+        val expected = VisibilityGraph(
+            listOf(
+                Point(0, 0),
+                Point(0, 1),
+                Point(1, 1),
+                Point(1, 0),
+                Point(10, 10),
+            ),
+            mapOf(
+                0 to setOf(3, 1),
+                1 to setOf(0, 2, 4),
+                2 to setOf(1, 3, 4),
+                3 to setOf(0, 2, 4),
+                4 to setOf(1, 2, 3),
+            )
+        )
+
+        assertEquals(expected, visibilityGraph)
+    }
+
+    @Test
     fun testRussianLetterP() {
         val areaMap = AreaMap(
             listOf(
@@ -375,6 +445,150 @@ class GraphServiceImplTest {
                 5 to setOf(2, 6),
                 6 to setOf(5, 7),
                 7 to setOf(0, 6)
+            )
+        )
+
+        assertEquals(expected, visibilityGraph)
+    }
+
+    @Test
+    fun testRussianLetterPWithExplicitPointOnOneEdge() {
+        val areaMap = AreaMap(
+            listOf(
+                Polygon(
+                    listOf(
+                        Point(0, 0),
+                        Point(0, 3),
+                        Point(1, 3),
+                        Point(1, 1),
+                        Point(2, 1),
+                        Point(2, 3),
+                        Point(3, 3),
+                        Point(3, 0),
+                        Point(2, 0)
+                    )
+                )
+            )
+        )
+        val visibilityGraph = graphService.convertToVisibilityGraph(areaMap)
+
+        val expected = VisibilityGraph(
+            listOf(
+                Point(0, 0),
+                Point(0, 3),
+                Point(1, 3),
+                Point(1, 1),
+                Point(2, 1),
+                Point(2, 3),
+                Point(3, 3),
+                Point(3, 0),
+                Point(2, 0)
+            ),
+            mapOf(
+                0 to setOf(1, 7),
+                1 to setOf(0, 2),
+                2 to setOf(1, 5),
+                3 to setOf(),
+                4 to setOf(),
+                5 to setOf(2, 6),
+                6 to setOf(5, 7),
+                7 to setOf(0, 6),
+                8 to setOf()
+            )
+        )
+
+        assertEquals(expected, visibilityGraph)
+    }
+
+    @Test
+    fun testSlimWallCase() {
+        val areaMap = AreaMap(
+            listOf(
+                Polygon(
+                    listOf(
+                        Point(1, 0),
+                        Point(1, 1),
+                        Point(0, 1),
+                        Point(1, 1),
+                        Point(1, 2),
+                        Point(2, 2),
+                        Point(2, 1),
+                        Point(3, 1),
+                        Point(2, 1),
+                        Point(2, 0)
+                    )
+                )
+            )
+        )
+        val visibilityGraph = graphService.convertToVisibilityGraph(areaMap)
+
+        val expected = VisibilityGraph(
+            listOf(
+                Point(1, 0),
+                Point(1, 1),
+                Point(0, 1),
+                Point(1, 2),
+                Point(2, 2),
+                Point(2, 1),
+                Point(3, 1),
+                Point(2, 0)
+            ),
+            mapOf(
+                0 to setOf(2, 7),
+                1 to setOf(),
+                2 to setOf(0, 3),
+                3 to setOf(2, 4),
+                4 to setOf(3, 6),
+                5 to setOf(),
+                6 to setOf(7, 4),
+                7 to setOf(0, 6),
+            )
+        )
+
+        assertEquals(expected, visibilityGraph)
+    }
+
+    @Test
+    fun testSelfIntersectionWithProbe() {
+        val areaMap = AreaMap(
+            listOf(
+                Polygon(
+                    listOf(
+                        Point(0, 0),
+                        Point(2, 2),
+                        Point(0, 4),
+                        Point(3, 4),
+                        Point(1, 2),
+                        Point(3, 0),
+                    )
+                ),
+                Polygon(
+                    listOf(
+                        Point(4, 2)
+                    )
+                )
+            )
+        )
+        val visibilityGraph = graphService.convertToVisibilityGraph(areaMap)
+
+        val expected = VisibilityGraph(
+            listOf(
+                Point(0, 0),
+                Point(2, 2),
+                Point(0, 4),
+                Point(3, 4),
+                Point(1, 2),
+                Point(3, 0),
+                Point(4, 2)
+            ),
+            mapOf(
+                0 to setOf(5, 4, 2),
+                1 to setOf(5, 3, 6),
+                2 to setOf(0, 4, 3),
+                3 to setOf(1, 5, 6, 2),
+                4 to setOf(0, 2),
+                5 to setOf(0, 1, 3, 6),
+                6 to setOf(5, 1, 3)
             )
         )
 

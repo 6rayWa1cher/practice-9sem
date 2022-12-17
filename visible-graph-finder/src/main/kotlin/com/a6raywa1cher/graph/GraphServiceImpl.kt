@@ -16,11 +16,20 @@ internal data class Vector(val x: Int, val y: Int) {
     infix fun dot(other: Vector): Int = this.x * other.x + this.y * other.y
 }
 
+internal fun Vector.isCollinear(other: Vector) = this.x * other.x >= 0 && this.y * other.y >= 0
+
 internal fun Point.isInsideObservationArea(pl: Point, p: Point, pr: Point): Boolean {
     val v1 = Vector(p, pl)
     val v2 = Vector(p, pr)
     val v3 = Vector(p, this)
-    if (v1 * v2 == 0) return false
+    if (v1 * v2 == 0) {
+        val va = Vector(pl, p)
+        val vb = Vector(p, pr)
+        if (!va.isCollinear(vb)) return false
+        val vd = Vector(pl, this)
+        val ve = Vector(p, this)
+        return va * vd < 0 && vb * ve < 0
+    }
     return if (v1 * v2 < 0) v1 * v3 < 0 && v3 * v2 < 0 else v1 * v3 > 0 && v3 * v2 > 0
 }
 
@@ -35,7 +44,8 @@ internal fun Polygon.getConvexPoints(): List<Point> {
         val pl = points[getPrevIndex(i, points)]
         val p = points[i]
         val pr = points[getNextIndex(i, points)]
-        if (Vector(pl, pr) * Vector(pl, p) >= 0) out.add(p)
+        val t = Vector(pl, pr) * Vector(pl, p)
+        if (t > 0 || (t == 0 && !Vector(pl, p).isCollinear(Vector(p, pr)))) out.add(p)
     }
     return out
 }
@@ -103,6 +113,8 @@ class GraphServiceImpl : GraphService {
                     for (p2 in pts2) {
                         if (p1 == p2) continue
                         if (p2.isInsideObservationArea(p1l, p1, p1r)) continue
+
+                        if (p1 in visibleNeighbours[p1]!!) continue
 
                         var foundIntersection = false
                         for ((p3, p4) in polygons.asSequence().flatMap { it.lines() }) {
