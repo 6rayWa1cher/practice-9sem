@@ -9,7 +9,79 @@ class GraphServiceImplTest {
     private val graphService = GraphServiceImpl()
 
     @Test
-    fun testIsClockwise() {
+    fun testIntersects__false1() {
+        val p1 = Point(0, 0)
+        val p2 = Point(0, 1)
+        val p3 = Point(10, 0)
+        val p4 = Point(11, 0)
+        assertFalse(intersects(p1, p2, p3, p4))
+        assertFalse(intersects(p2, p1, p3, p4))
+        assertFalse(intersects(p1, p2, p4, p3))
+        assertFalse(intersects(p2, p1, p4, p3))
+    }
+
+    @Test
+    fun testIntersects__false2() {
+        val p1 = Point(0, 0)
+        val p2 = Point(1, 0)
+        val p3 = Point(10, 0)
+        val p4 = Point(11, 0)
+        assertFalse(intersects(p1, p2, p3, p4))
+        assertFalse(intersects(p2, p1, p3, p4))
+        assertFalse(intersects(p1, p2, p4, p3))
+        assertFalse(intersects(p2, p1, p4, p3))
+    }
+
+    @Test
+    fun testIntersects__false3() {
+        val p1 = Point(0, 0)
+        val p2 = Point(2, 2)
+        val p3 = Point(3, 3)
+        val p4 = Point(5, 5)
+        assertFalse(intersects(p1, p2, p3, p4))
+        assertFalse(intersects(p2, p1, p3, p4))
+        assertFalse(intersects(p1, p2, p4, p3))
+        assertFalse(intersects(p2, p1, p4, p3))
+    }
+
+    @Test
+    fun testIntersects__false4() {
+        val p1 = Point(0, 0)
+        val p2 = Point(0, 2)
+        val p3 = Point(1, 0)
+        val p4 = Point(1, 2)
+        assertFalse(intersects(p1, p2, p3, p4))
+        assertFalse(intersects(p2, p1, p3, p4))
+        assertFalse(intersects(p1, p2, p4, p3))
+        assertFalse(intersects(p2, p1, p4, p3))
+    }
+
+    @Test
+    fun testIntersects__true1() {
+        val p1 = Point(0, 0)
+        val p2 = Point(0, 1)
+        val p3 = Point(-10, 0)
+        val p4 = Point(11, 0)
+        assertTrue(intersects(p1, p2, p3, p4))
+        assertTrue(intersects(p2, p1, p3, p4))
+        assertTrue(intersects(p1, p2, p4, p3))
+        assertTrue(intersects(p2, p1, p4, p3))
+    }
+
+    @Test
+    fun testIntersects__true2() {
+        val p1 = Point(0, 0)
+        val p2 = Point(1, 0)
+        val p3 = Point(-10, 0)
+        val p4 = Point(10, 0)
+        assertTrue(intersects(p1, p2, p3, p4))
+        assertTrue(intersects(p2, p1, p3, p4))
+        assertTrue(intersects(p1, p2, p4, p3))
+        assertTrue(intersects(p2, p1, p4, p3))
+    }
+
+    @Test
+    fun testIsClockwise1() {
         val p1 = Polygon(
             listOf(
                 Point(3, 1),
@@ -21,7 +93,24 @@ class GraphServiceImplTest {
     }
 
     @Test
-    fun testIsInsideObservationArea() {
+    fun testIsClockwise2() {
+        val p = Polygon(
+            listOf(
+                Point(0, 0),
+                Point(0, 3),
+                Point(1, 3),
+                Point(1, 1),
+                Point(2, 1),
+                Point(2, 3),
+                Point(3, 3),
+                Point(3, 0)
+            )
+        )
+        assertFalse(p.isClockwise())
+    }
+
+    @Test
+    fun testIsInsideObservationArea1() {
         val pl = Point(3, 0)
         val p = Point(0, 0)
         val pr = Point(0, 3)
@@ -29,8 +118,20 @@ class GraphServiceImplTest {
         assertTrue(Point(2, 1).isInsideObservationArea(pl, p, pr))
         assertTrue(Point(3, 1).isInsideObservationArea(pl, p, pr))
         assertTrue(Point(4, 1).isInsideObservationArea(pl, p, pr))
+        assertTrue(Point(1, 3).isInsideObservationArea(pl, p, pr))
         assertFalse(Point(-1, -1).isInsideObservationArea(pl, p, pr))
         assertFalse(Point(2, -1).isInsideObservationArea(pl, p, pr))
+        assertFalse(pl.isInsideObservationArea(pl, p, pr))
+        assertFalse(pr.isInsideObservationArea(pl, p, pr))
+    }
+
+    @Test
+    fun testIsInsideObservationArea2() {
+        val pl = Point(0, 3)
+        val p = Point(1, 3)
+        val pr = Point(1, 2)
+        assertTrue(Point(0, 0).isInsideObservationArea(pl, p, pr))
+        assertFalse(Point(2, 3).isInsideObservationArea(pl, p, pr))
         assertFalse(pl.isInsideObservationArea(pl, p, pr))
         assertFalse(pr.isInsideObservationArea(pl, p, pr))
     }
@@ -220,14 +321,14 @@ class GraphServiceImplTest {
                 Point(11, 0),
             ),
             mapOf(
-                0 to setOf(2, 1),
-                1 to setOf(0, 3),
-                2 to setOf(0, 3, 4, 5),
-                3 to setOf(2, 1, 4, 5),
-                4 to setOf(2, 3, 5, 6),
-                5 to setOf(4, 2, 3, 7),
-                6 to setOf(4, 7),
-                7 to setOf(6, 5)
+                0 to setOf(1, 3),
+                1 to setOf(0, 2),
+                2 to setOf(1, 3, 5, 4),
+                3 to setOf(0, 2, 4, 5),
+                4 to setOf(3, 2, 5, 7),
+                5 to setOf(4, 3, 2, 6),
+                6 to setOf(7, 5),
+                7 to setOf(4, 6)
             )
         )
 
@@ -268,10 +369,10 @@ class GraphServiceImplTest {
             mapOf(
                 0 to setOf(1, 7),
                 1 to setOf(0, 2),
-                2 to setOf(3, 4, 5),
-                3 to setOf(4, 5, 2),
-                4 to setOf(3, 2, 5),
-                5 to setOf(2, 3, 4),
+                2 to setOf(1, 5),
+                3 to setOf(),
+                4 to setOf(),
+                5 to setOf(2, 6),
                 6 to setOf(5, 7),
                 7 to setOf(0, 6)
             )

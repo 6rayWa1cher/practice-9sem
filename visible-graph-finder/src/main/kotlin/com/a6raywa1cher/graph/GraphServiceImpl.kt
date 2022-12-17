@@ -2,6 +2,8 @@ package com.a6raywa1cher.graph
 
 import org.slf4j.LoggerFactory
 import java.lang.Math.floorMod
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.sqrt
 
 internal data class Vector(val x: Int, val y: Int) {
@@ -62,12 +64,25 @@ internal fun Polygon.lines() = sequence {
 
 private fun vectorMultiplication(a: Point, b: Point, origin: Point): Int = Vector(origin, a) * Vector(origin, b)
 
+private fun Point.isPointInRectangle(p1: Point, p2: Point): Boolean {
+    val minX = min(p1.x, p2.x)
+    val minY = min(p1.y, p2.y)
+    val maxX = max(p1.x, p2.x)
+    val maxY = max(p1.y, p2.y)
+    return (this.x in minX..maxX && this.y in minY..maxY)
+}
+
 internal fun intersects(p11: Point, p12: Point, p21: Point, p22: Point): Boolean {
     val t1 = vectorMultiplication(p22, p12, p11)
     val t2 = vectorMultiplication(p21, p12, p11)
     val d1 = vectorMultiplication(p22, p12, p21)
     val d2 = vectorMultiplication(p22, p11, p21)
-    return t1 * t2 <= 0 && d1 * d2 <= 0
+    return if (t1 * t2 == 0 && d1 * d2 == 0) {
+        p11.isPointInRectangle(p21, p22) ||
+                p12.isPointInRectangle(p21, p22) ||
+                p21.isPointInRectangle(p11, p12) ||
+                p22.isPointInRectangle(p11, p12)
+    } else t1 * t2 <= 0 && d1 * d2 <= 0
 }
 
 class GraphServiceImpl : GraphService {
@@ -77,12 +92,13 @@ class GraphServiceImpl : GraphService {
         val polygons = areaMap.polygons.map { it.normalize() }
         val visibleNeighbours = polygons.flatMap { it.points }.associateWith { mutableSetOf<Point>() }
 
-        val polygonPoints = polygons.associateWith { it.getConvexPoints() }
-        for (pts1 in polygonPoints.values) {
+        val polygonPoints = polygons.associateWith { it.getConvexPoints().toSet() }
+        for ((polygon1, pts1) in polygonPoints.entries) {
             println("$pts1")
-            for ((i, p1) in pts1.withIndex()) {
-                val p1l = pts1[getPrevIndex(i, pts1)]
-                val p1r = pts1[getNextIndex(i, pts1)]
+            for ((i, p1) in polygon1.points.withIndex()) {
+                if (p1 !in pts1) continue
+                val p1l = polygon1.points[getPrevIndex(i, polygon1.points)]
+                val p1r = polygon1.points[getNextIndex(i, polygon1.points)]
                 for (pts2 in polygonPoints.values) {
                     for (p2 in pts2) {
                         if (p1 == p2) continue
