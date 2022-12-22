@@ -23,6 +23,8 @@ fun Application.configureHTTP() {
         allowMethod(HttpMethod.Patch)
         allowMethod(HttpMethod.Post)
         allowMethod(HttpMethod.Get)
+        allowHeader(HttpHeaders.ContentType)
+        allowHeader(HttpHeaders.AccessControlAllowOrigin)
         anyHost()
     }
     install(DefaultHeaders) {
