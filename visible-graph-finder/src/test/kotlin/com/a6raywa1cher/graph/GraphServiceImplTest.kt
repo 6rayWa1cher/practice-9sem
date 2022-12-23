@@ -1,9 +1,6 @@
 package com.a6raywa1cher.graph
 
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class GraphServiceImplTest {
     private val graphService = GraphServiceImpl()
@@ -50,6 +47,30 @@ class GraphServiceImplTest {
         val p2 = Point(0, 2)
         val p3 = Point(1, 0)
         val p4 = Point(1, 2)
+        assertFalse(intersects(p1, p2, p3, p4))
+        assertFalse(intersects(p2, p1, p3, p4))
+        assertFalse(intersects(p1, p2, p4, p3))
+        assertFalse(intersects(p2, p1, p4, p3))
+    }
+
+    @Test
+    fun testIntersects__false5() {
+        val p1 = Point(256, 128)
+        val p2 = Point(197, 385)
+        val p3 = Point(775, 259)
+        val p4 = Point(731, 66)
+        assertFalse(intersects(p1, p2, p3, p4))
+        assertFalse(intersects(p2, p1, p3, p4))
+        assertFalse(intersects(p1, p2, p4, p3))
+        assertFalse(intersects(p2, p1, p4, p3))
+    }
+
+    @Test
+    fun testIntersects__false6() {
+        val p1 = Point(x = 256, y = 128)
+        val p2 = Point(x = 768, y = 384)
+        val p3 = Point(x = 340, y = 493)
+        val p4 = Point(x = 374, y = 371)
         assertFalse(intersects(p1, p2, p3, p4))
         assertFalse(intersects(p2, p1, p3, p4))
         assertFalse(intersects(p1, p2, p4, p3))
@@ -156,8 +177,8 @@ class GraphServiceImplTest {
         assertFalse(Point(3, -3).isInsideObservationArea(pl, p, pr))
         assertFalse(Point(0, 0).isInsideObservationArea(pl, p, pr))
         assertFalse(Point(3, 0).isInsideObservationArea(pl, p, pr))
-        for (i in -3..3) {
-            for (j in -3..3) {
+        for (i in -3L..3L) {
+            for (j in -3L..3L) {
                 assertFalse(Point(i, j).isInsideObservationArea(pl, p, pr))
             }
         }
@@ -549,6 +570,7 @@ class GraphServiceImplTest {
     }
 
     @Test
+    @Ignore
     fun testSelfIntersectionWithProbe() {
         val areaMap = AreaMap(
             listOf(
@@ -589,6 +611,49 @@ class GraphServiceImplTest {
                 4 to setOf(0, 2),
                 5 to setOf(0, 1, 3, 6),
                 6 to setOf(5, 1, 3)
+            )
+        )
+
+        assertEquals(expected, visibilityGraph)
+    }
+
+    @Test
+    fun testRealCase1() {
+        val areaMap = AreaMap(
+            listOf(
+                Polygon(listOf(Point(256, 128))),
+                Polygon(listOf(Point(197, 385), Point(340, 493), Point(374, 371))),
+                Polygon(listOf(Point(510, 137), Point(731, 66), Point(775, 259), Point(479, 220))),
+                Polygon(listOf(Point(768, 384))),
+            )
+        )
+        val visibilityGraph = graphService.convertToVisibilityGraph(areaMap)
+
+        val expected = VisibilityGraph(
+            listOf(
+                Point(x = 256, y = 128),
+
+                Point(x = 197, y = 385),
+                Point(x = 340, y = 493),
+                Point(x = 374, y = 371),
+
+                Point(x = 479, y = 220),
+                Point(x = 775, y = 259),
+                Point(x = 731, y = 66),
+                Point(x = 510, y = 137),
+
+                Point(x = 768, y = 384)
+            ),
+            mapOf(
+                0 to setOf(1, 3, 4, 6, 7, 8),
+                1 to setOf(0, 2, 3, 4, 5, 7),
+                2 to setOf(1, 3, 4, 5, 7, 8),
+                3 to setOf(0, 1, 2, 4, 5, 7, 8),
+                4 to setOf(0, 1, 2, 3, 5, 7, 8),
+                5 to setOf(1, 2, 3, 4, 6, 8),
+                6 to setOf(0, 5, 7),
+                7 to setOf(0, 1, 2, 3, 4, 6),
+                8 to setOf(0, 2, 3, 4, 5)
             )
         )
 

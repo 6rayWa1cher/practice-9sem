@@ -1,3 +1,3 @@
 package com.a6raywa1cher.graph
 
-data class Point(val x: Int, val y: Int)
+data class Point(val x: Long, val y: Long)
