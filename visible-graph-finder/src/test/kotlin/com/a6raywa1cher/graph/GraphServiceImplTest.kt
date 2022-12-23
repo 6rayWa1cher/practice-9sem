@@ -506,15 +506,15 @@ class GraphServiceImplTest {
                 Point(2, 0)
             ),
             mapOf(
-                0 to setOf(1, 7),
+                0 to setOf(1, 7, 8),
                 1 to setOf(0, 2),
                 2 to setOf(1, 5),
                 3 to setOf(),
                 4 to setOf(),
                 5 to setOf(2, 6),
                 6 to setOf(5, 7),
-                7 to setOf(0, 6),
-                8 to setOf()
+                7 to setOf(0, 6, 8),
+                8 to setOf(0, 7)
             )
         )
 
@@ -654,6 +654,135 @@ class GraphServiceImplTest {
                 6 to setOf(0, 5, 7),
                 7 to setOf(0, 1, 2, 3, 4, 6),
                 8 to setOf(0, 2, 3, 4, 5)
+            )
+        )
+
+        assertEquals(expected, visibilityGraph)
+    }
+
+    @Test
+    fun testOneCubeOnAnotherBigger() {
+        val areaMap = AreaMap(
+            listOf(
+                Polygon(
+                    listOf(
+                        Point(0, 2),
+                    )
+                ),
+                Polygon(
+                    listOf(
+                        Point(5, 2)
+                    )
+                ),
+                Polygon(
+                    listOf(
+                        Point(2, 0),
+                        Point(2, 2),
+                        Point(3, 2),
+                        Point(3, 0)
+                    )
+                ),
+                Polygon(
+                    listOf(
+                        Point(1, 2),
+                        Point(1, 4),
+                        Point(4, 4),
+                        Point(4, 2)
+                    )
+                )
+            )
+        )
+        val visibilityGraph = graphService.convertToVisibilityGraph(areaMap)
+
+        val expected = VisibilityGraph(
+            listOf(
+                Point(0, 2),
+                Point(5, 2),
+                Point(2, 0),
+                Point(2, 2),
+                Point(3, 2),
+                Point(3, 0),
+                Point(1, 2),
+                Point(1, 4),
+                Point(4, 4),
+                Point(4, 2)
+            ),
+            mapOf(
+                0 to setOf(2, 6, 7),
+                1 to setOf(5, 8, 9),
+                2 to setOf(0, 5, 6),
+                3 to setOf(6),
+                4 to setOf(9),
+                5 to setOf(1, 2, 9),
+                6 to setOf(0, 2, 3, 7),
+                7 to setOf(0, 6, 8),
+                8 to setOf(1, 7, 9),
+                9 to setOf(1, 4, 5, 8)
+            )
+        )
+
+        assertEquals(expected, visibilityGraph)
+    }
+
+    @Test
+    @Ignore
+    fun testOneCubeOnAnotherShifted() {
+        val areaMap = AreaMap(
+            listOf(
+                Polygon(
+                    listOf(
+                        Point(0, 2),
+                    )
+                ),
+                Polygon(
+                    listOf(
+                        Point(6, 2)
+                    )
+                ),
+                Polygon(
+                    listOf(
+                        Point(3, 0),
+                        Point(3, 2),
+                        Point(5, 2),
+                        Point(5, 0)
+                    )
+                ),
+                Polygon(
+                    listOf(
+                        Point(1, 2),
+                        Point(1, 4),
+                        Point(4, 4),
+                        Point(4, 2)
+                    )
+                )
+            )
+        )
+        val visibilityGraph = graphService.convertToVisibilityGraph(areaMap)
+
+        val expected = VisibilityGraph(
+            listOf(
+                Point(0, 2),
+                Point(6, 2),
+                Point(3, 0),
+                Point(3, 2),
+                Point(5, 2),
+                Point(5, 0),
+                Point(1, 2),
+                Point(1, 4),
+                Point(4, 4),
+                Point(4, 2)
+            ),
+            mapOf(
+                0 to setOf(2, 6, 7),
+                1 to setOf(4, 5, 8),
+                2 to setOf(0, 5, 6),
+                3 to setOf(6),
+                4 to setOf(1, 5, 8, 9),
+                5 to setOf(1, 2, 4),
+                6 to setOf(0, 2, 3, 7),
+                7 to setOf(0, 6, 8),
+                8 to setOf(1, 4, 7),
+                9 to setOf(8)
             )
         )
 

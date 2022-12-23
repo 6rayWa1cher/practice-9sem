@@ -13,8 +13,6 @@ internal data class Vector(val x: Long, val y: Long) {
     fun length(): Double = sqrt((x * x + y * y).toDouble())
 
     operator fun times(other: Vector): Long = this.x * other.y - this.y * other.x
-
-    infix fun dot(other: Vector): Long = this.x * other.x + this.y * other.y
 }
 
 internal fun Vector.isCollinear(other: Vector) = this.x * other.x >= 0 && this.y * other.y >= 0
@@ -46,7 +44,7 @@ internal fun Polygon.getConvexPoints(): List<Point> {
         val p = points[i]
         val pr = points[getNextIndex(i, points)]
         val t = Vector(pl, pr) * Vector(pl, p)
-        if (t > 0 || (t == 0L && !Vector(pl, p).isCollinear(Vector(p, pr)))) out.add(p)
+        if (t >= 0) out.add(p)
     }
     return out
 }
@@ -73,18 +71,6 @@ internal fun Polygon.lines() = sequence {
     }
 }
 
-private fun vectorMultiplication(a: Point, b: Point, origin: Point): Long = Vector(origin, a) * Vector(origin, b)
-
-private fun Point.isPointInRectangle(p1: Point, p2: Point): Boolean {
-    val minX = min(p1.x, p2.x)
-    val minY = min(p1.y, p2.y)
-    val maxX = max(p1.x, p2.x)
-    val maxY = max(p1.y, p2.y)
-    return (this.x in minX..maxX && this.y in minY..maxY)
-}
-
-inline fun area(a: Point, b: Point, c: Point) = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)
-
 inline fun intersect_1(_a: Long, _b: Long, _c: Long, _d: Long): Boolean {
     var a = _a
     var b = _b
@@ -103,21 +89,30 @@ inline fun intersect_1(_a: Long, _b: Long, _c: Long, _d: Long): Boolean {
     return max(a, c) <= min(b, d)
 }
 
-inline fun sign(a: Long) = if (a < 0) -1 else if (a > 0) 1 else 0
+inline fun det(a: Long, b: Long, c: Long, d: Long) = a * d - b * c
+
+const val e = 1e-9
+
+inline fun between(a: Long, b: Long, c: Double) = min(a, b) <= c + e && c <= max(a, b) + e
 
 internal fun intersects(a: Point, b: Point, c: Point, d: Point): Boolean {
-    val intersect1 = intersect_1(a.x, b.x, c.x, d.x)
-    val intersect11 = intersect_1(a.y, b.y, c.y, d.y)
-    val area = area(a, b, c)
-    val area1 = area(a, b, d)
-    val area2 = area(c, d, a)
-    val area3 = area(c, d, b)
-    return (
-            intersect1
-                    && intersect11
-                    && sign(area) * sign(area1) <= 0
-                    && sign(area2) * sign(area3) <= 0
-            )
+    val a1 = a.y - b.y
+    val b1 = b.x - a.x
+    val c1 = -a1 * a.x - b1 * a.y
+    val a2 = c.y - d.y
+    val b2 = d.x - c.x
+    val c2 = -a2 * c.x - b2 * c.y
+    val zn = det(a1, b1, a2, b2)
+    return if (zn != 0L) {
+        val x = -det(c1, b1, c2, b2) * 1.toDouble() / zn
+        val y = -det(a1, c1, a2, c2) * 1.toDouble() / zn
+        (between(a.x, b.x, x) && between(a.y, b.y, y)
+                && between(c.x, d.x, x) && between(c.y, d.y, y))
+    } else {
+        (det(a1, c1, a2, c2) == 0L && det(b1, c1, b2, c2) == 0L
+                && intersect_1(a.x, b.x, c.x, d.x)
+                && intersect_1(a.y, b.y, c.y, d.y))
+    }
 }
 
 class GraphServiceImpl : GraphService {

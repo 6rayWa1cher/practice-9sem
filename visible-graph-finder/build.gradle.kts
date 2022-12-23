@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "com.a6raywa1cher"
-version = "0.0.1"
+version = "1.0.0"
 application {
     mainClass.set("com.a6raywa1cher.ApplicationKt")
 
