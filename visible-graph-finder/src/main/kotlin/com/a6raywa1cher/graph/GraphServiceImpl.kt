@@ -134,7 +134,7 @@ class GraphServiceImpl : GraphService {
         val e1 = polygonEntries[p1i]
         val polygon1 = e1.key
         val pts1 = e1.value
-        logger.trace("$pts1")
+//        logger.trace("$pts1")
         for ((i, p1) in polygon1.points.withIndex()) {
             if (p1 !in pts1) continue
             val p1l = polygon1.points[getPrevIndex(i, polygon1.points)]
@@ -154,7 +154,7 @@ class GraphServiceImpl : GraphService {
 
                         if (intersects(p1, p2, p3, p4)) {
                             foundIntersection = true
-                            logger.trace("($p1, $p2) intersects ($p3, $p4)")
+//                            logger.trace("($p1, $p2) intersects ($p3, $p4)")
                             break
                         }
                     }
